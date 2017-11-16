@@ -5,38 +5,40 @@ using Microsoft.Extensions.Configuration;
 
 namespace App
 {
-public interface IWebHostBuilder
-{
-    IWebHost Build();
-    IWebHostBuilder ConfigureServices(Action<IServiceCollection> configureServices);
-    IWebHostBuilder UseSetting(string key, string value);
-}
-
-public class WebHostBuilder : IWebHostBuilder
-{
-    private readonly IServiceCollection _services;
-    private readonly IConfiguration _config;
-
-    public WebHostBuilder()
+    //WebHost的创建者和提供服务数据
+    //作用:管道创建过程中所需的所有信息都来源于作为创建者的WebHostBuilder,采用“依赖注入”的形式来为创建的WebHost提供这些信息
+    public interface IWebHostBuilder
     {
-        _services = new ServiceCollection().AddSingleton<IApplicationBuilder, ApplicationBuilder>();
-        _config = new ConfigurationBuilder()
-            .AddInMemoryCollection()
-            .Build();
+        IWebHost Build();
+        IWebHostBuilder ConfigureServices(Action<IServiceCollection> configureServices);
+        IWebHostBuilder UseSetting(string key, string value);
     }
 
-    public IWebHost Build() => new WebHost(_services, _config);
-
-    public IWebHostBuilder ConfigureServices(Action<IServiceCollection> configureServices)
+    public class WebHostBuilder : IWebHostBuilder
     {
-        configureServices(_services);
-        return this;
-    }
+        private readonly IServiceCollection _services;
+        private readonly IConfiguration _config;
 
-    public IWebHostBuilder UseSetting(string key, string value)
-    {
-        _config[key] = value;
-        return this;
+        public WebHostBuilder()
+        {
+            // 用于注册中间件 创建管道服务 (依赖注入:注入)
+            _services = new ServiceCollection().AddSingleton<IApplicationBuilder, ApplicationBuilder>();
+            // 自定义配置
+            _config = new ConfigurationBuilder().AddInMemoryCollection().Build();
+        }
+
+        public IWebHost Build() => new WebHost(_services, _config);
+
+        public IWebHostBuilder ConfigureServices(Action<IServiceCollection> configureServices)
+        {
+            configureServices(_services);
+            return this;
+        }
+
+        public IWebHostBuilder UseSetting(string key, string value)
+        {
+            _config[key] = value;
+            return this;
+        }
     }
-}
 }

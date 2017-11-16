@@ -6,13 +6,14 @@ using System.Threading.Tasks;
 
 namespace App
 {
-public interface IServerAddressesFeature
-{
-    ICollection<string> Addresses { get; }
-}
+    // IServerAddressesFeature--服务器监听地址集合
+    public interface IServerAddressesFeature
+    {
+        ICollection<string> Addresses { get; }
+    }
 
-public class ServerAddressesFeature : IServerAddressesFeature
-{
-    public ICollection<string> Addresses { get; } = new Collection<string>();
-}
+    public class ServerAddressesFeature : IServerAddressesFeature
+    {
+        public ICollection<string> Addresses { get; } = new Collection<string>();
+    }
 }

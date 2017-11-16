@@ -14,14 +14,17 @@ namespace App
         {
             new WebHostBuilder()
                 .UseHttpListener()
-                .UseUrls("http://localhost:3721")///images
-                .Configure(app => app.UseImages(@"D:\Picture"))
+                .UseUrls("http://localhost:3721/images")
+                .Configure(app =>
+                 {
+                     app.UseImages(@"D:\Picture");
+                 })
                 .Build()
                 .Start();
             Console.Read();
         }
     }
-
+    //扩展类,中间件的方法可以写在这里
     public static class Extensions
     {
         private static Dictionary<string, string> mediaTypeMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -46,15 +49,23 @@ namespace App
 
         public static IWebHostBuilder Configure(this IWebHostBuilder builder, Action<IApplicationBuilder> configure)
         {
+            // "委托和管道理解" 中的  DelegateStartup ds = new DelegateStartup(Middle);
             return builder.ConfigureServices(services => services.AddSingleton<IStartup>(new DelegateStartup(configure)));
         }
-
+        /// <summary>
+        /// 自己实现的中间件
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="rootDirectory"></param>
+        /// <returns></returns>
         public static IApplicationBuilder UseImages(this IApplicationBuilder app, string rootDirectory)
         {
             Func<RequestDelegate, RequestDelegate> middleware = next =>
             {
+                // 返回多个中间件对请求的上下文处理
                 return async context =>
                 {
+                    // 根据URL解析出来图片物理路径
                     string filePath = context.Request.Url.LocalPath.Substring(context.Request.PathBase.Length + 1);
                     filePath = Path.Combine(rootDirectory, filePath).Replace('/', Path.DirectorySeparatorChar);
                     filePath = File.Exists(filePath)
@@ -70,11 +81,11 @@ namespace App
                             await context.Response.WriteFileAsync(filePath, mediaType);
                         }
                     }
-                    await next(context);
+                    await next(context);// 启动下一个中间件,处理完成后,返回此方法,最后返回多个中间件对请求的上下文 处理
                 };
             };
 
-            return app.Use(middleware);
+            return app.Use(middleware); // 把中间件方法前面添加到中间件集合
         }
         public static async Task WriteFileAsync(this HttpResponse response, string fileName, string contentType)
         {
