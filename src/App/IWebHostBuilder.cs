@@ -26,7 +26,7 @@ namespace App
             // 自定义配置
             _config = new ConfigurationBuilder().AddInMemoryCollection().Build();
         }
-
+        // IWebHostBuilder负责创建IWebHost
         public IWebHost Build() => new WebHost(_services, _config);
 
         public IWebHostBuilder ConfigureServices(Action<IServiceCollection> configureServices)
@@ -41,5 +41,6 @@ namespace App
             _config[key] = value;
             return this;
         }
-    }
+      
+    }    
 }

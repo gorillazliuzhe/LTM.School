@@ -9,6 +9,7 @@ namespace App
     public interface IWebHost
     {
         void Start();
+        void Run();
     }
 
     public class WebHost : IWebHost
@@ -22,7 +23,20 @@ namespace App
             _serviceProvider = services.BuildServiceProvider();
             this._config = config;
         }
-
+        // 创建IWebHostBuilder
+        public static IWebHostBuilder CreateDefaultBuilder(string[] args)
+        {
+            var builder = new WebHostBuilder()
+                .UseHttpListener()
+                .UseUrls("http://localhost:3721/images");
+            return builder;
+        }
+        // 启动IWebHost
+        public void Run()
+        {
+            Start();
+        }
+        // 启动IWebHost
         public void Start()
         {
             /* 参考 委托和管道理解 中的分解方法 */

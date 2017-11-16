@@ -12,25 +12,37 @@ namespace App
     {
         public static void Main(string[] args)
         {
+            #region core1.1
             new WebHostBuilder()
-                .UseHttpListener()
-                .UseUrls("http://localhost:3721/images")
-                .Configure(app =>
-                 {
-                     app.UseImages(@"D:\Picture");
-                     app.Use(next => // ApplicationBuilder build的时候给next赋值
-                     {
-                         return async context => // 这块是 服务器接受到请求 上一个中间件处理请求之后调用此方法给context 赋值,之后这个方法执行完成返回上一方法最后一行
-                         {
-                             await Task.Run(() => Console.WriteLine("刘哲"));
-                             await next(context);
-                         };
-                     });
-                 })
-                .Build()
-                .Start();
+              .UseHttpListener()
+              .UseUrls("http://localhost:3721/images")
+              .Configure(app =>
+              {
+                  app.UseImages(@"D:\Picture");
+                  app.Use(next => // ApplicationBuilder build的时候给next赋值
+                    {
+                        return async context => // 这块是 服务器接受到请求 上一个中间件处理请求之后调用此方法给context 赋值,之后这个方法执行完成返回上一方法最后一行
+                        {
+                            await Task.Run(() => Console.WriteLine("刘哲"));
+                            await next(context);
+                        };
+                    });
+              })
+              .Build()
+              .Start();
+            #endregion
+
+            #region core 2.0
+            //BuildWebHost(args).Run();
+            #endregion
+
             Console.Read();
         }
+
+        public static IWebHost BuildWebHost(string[] args) =>
+             WebHost.CreateDefaultBuilder(args)
+                .Configure(app =>app.UseImages(@"D:\Picture"))
+                .Build();
     }
     //扩展类,中间件的方法可以写在这里
     public static class Extensions
