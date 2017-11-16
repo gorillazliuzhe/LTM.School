@@ -27,11 +27,12 @@ namespace App
         {
             /* 参考 委托和管道理解 中的分解方法 */
 
-            // 依赖注入:解析 根据 注入的类型 获取服务
+            // 依赖注入:解析 根据 注入的类型 获取服务,  "委托和管道理解" 中的 Middleware middware = new Middleware();
             IApplicationBuilder applicationBuilder = _serviceProvider.GetRequiredService<IApplicationBuilder>();
             // 调用IApplicationBuilder Use方法注册中间件. "委托和管道理解" 中的 ds.Configure(middware);
             _serviceProvider.GetRequiredService<IStartup>().Configure(applicationBuilder);
 
+            // 获取解析的服务会调用 实现IServer接口的 HttpListenerServer 类的构造函数,相当于new. 会启动HttpListener 和设置监听地址
             IServer server = _serviceProvider.GetRequiredService<IServer>();
 
             // 给设置的地址特性 赋值
@@ -41,7 +42,7 @@ namespace App
             {
                 addressFeatures.Addresses.Add(address);
             }
-            // 当webhost中start运行时候会建立IServer和IHttpApplication并把IHttpApplication当作参数传给IServer
+            // 服务器Start方法开始的时候,管道已经构建完成了,需要的是等待http的请求到来,封装好上下文之后调用管道
             // applicationBuilder.Build()是属于返回第一个中间件,相当于返回了所有中间件对httpcontext的处理过程
             // "委托和管道理解" 中的 RequsetDelegate app = middware.Build();
             server.Start(new HostingApplication(applicationBuilder.Build()));

@@ -40,7 +40,7 @@ namespace App
             while (true)
             {
                 // 获取服务器接受到请求的原始上下文
-                HttpListenerContext httpListenerContext = this.Listener.GetContext();
+                HttpListenerContext httpListenerContext = this.Listener.GetContext(); // 这里代码会停止等待请求的到来才继续
                 // 把原始上下文封装成 也就是封装成特性,通过FeatureCollection做连接的桥梁
                 HttpListenerContextFeature feature = new HttpListenerContextFeature(httpListenerContext, this.Listener);
                 // 设置封装后的请求和响应,以便DefaultHttpContext再次封装成管道能处理的http上下文
@@ -52,8 +52,14 @@ namespace App
 
                 // 在上下文中处理请求
                 application.ProcessRequestAsync(context)
-                    .ContinueWith(_ => httpListenerContext.Response.Close())
-                    .ContinueWith(_ => application.DisposeContext(context, _.Exception));
+                    .ContinueWith(_ =>
+                    {
+                        httpListenerContext.Response.Close(); // 这个地方执行完,浏览器才真正请求结束,小圈不转了
+                    })
+                    .ContinueWith(_ =>
+                    {
+                        application.DisposeContext(context, _.Exception);// 最后释放 资源
+                    });
             }
         }
     }
@@ -65,27 +71,33 @@ namespace App
         public HttpListenerContextFeature(HttpListenerContext context, HttpListener listener)
         {
             this.context = context;
-            this.Url = context.Request.Url;
+            this.Url = context.Request.Url;// 给实现接口IHttpRequestFeature的属性赋值,之后DefaultHttpContext对象就等通过获取这个接口的属性值了
             this.OutputStream = context.Response.OutputStream;
             this.PathBase = (from it in listener.Prefixes
                              let pathBase = new Uri(it).LocalPath.TrimEnd('/')
                              where context.Request.Url.LocalPath.StartsWith(pathBase, StringComparison.OrdinalIgnoreCase)
                              select pathBase).First();
         }
+
         public string ContentType
         {
             get { return context.Response.ContentType; }
-            set { context.Response.ContentType = value; }
+            set
+            {
+                context.Response.ContentType = value;
+            }
         }
-
-        public Stream OutputStream { get; }
 
         public int StatusCode
         {
             get { return context.Response.StatusCode; }
-            set { context.Response.StatusCode = value; }
+            set
+            {
+                context.Response.StatusCode = value;
+            }
         }
 
+        public Stream OutputStream { get; }
         public Uri Url { get; }
         public string PathBase { get; }
     }

@@ -20,6 +20,8 @@ namespace App
         public override HttpRequest Request { get; }
         public override HttpResponse Response { get; }
     }
+
+    // 这里根据原始上下文只是封装了 请求的 Url,PathBase,和响应的 OutputStream 其他的是在中间件自己设置的:ContentType和StatusCode
     // 请求:获取(把原始HTTP上下文根据IHttpRequsetFeature规则)上下文封装成IHttpApplication可以处理的上下文
     public class DefaultHttpRequest : HttpRequest
     {

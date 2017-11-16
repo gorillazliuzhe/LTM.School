@@ -31,6 +31,7 @@ namespace App
 
         public IWebHostBuilder ConfigureServices(Action<IServiceCollection> configureServices)
         {
+            // 也就是调用委托的实现方法,比如:services => services.AddSingleton<IServer, HttpListenerServer>();
             configureServices(_services);
             return this;
         }
