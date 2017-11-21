@@ -13,7 +13,7 @@ namespace App
         public static void Main(string[] args)
         {
             #region core1.1
-            new WebHostBuilder()
+            new WebHostBuilder() // 准备阶段： var builder = new WebHostBuilder()，然后给WebHostBuilder各种填参数
               .UseHttpListener()
               .UseUrls("http://localhost:3721/images")
               .Configure(app =>
@@ -28,8 +28,8 @@ namespace App
                         };
                     });
               })
-              .Build()
-              .Start();
+              .Build() // 构建阶段： var host = builder.Builder() ，主要负责依懒注入的初始化，以及host的初始化
+              .Start(); // 启动阶段： host.start(); 之后是 运行阶段
             #endregion
 
             #region core 2.0

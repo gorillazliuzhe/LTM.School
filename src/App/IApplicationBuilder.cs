@@ -27,7 +27,7 @@ namespace App
             RequestDelegate app = context =>
             {
                 context.Response.StatusCode = 404;
-                return Task.FromResult(0);
+                return Task.CompletedTask;
             };
             // 为了保证中间件的顺序需要先Reverse()
             foreach (var component in middlewares.Reverse())
