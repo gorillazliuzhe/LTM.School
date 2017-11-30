@@ -33,7 +33,11 @@ namespace LTM.School.Controllers
                 return NotFound();
             }
 
-            var student = await _context.Students
+            //var student = await _context.Students
+            //    .SingleOrDefaultAsync(m => m.Id == id);
+
+            
+            var student = await _context.Students.Include(a=>a.Enrollments).ThenInclude(e=>e.Course).AsNoTracking()
                 .SingleOrDefaultAsync(m => m.Id == id);
             if (student == null)
             {
@@ -53,15 +57,23 @@ namespace LTM.School.Controllers
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        [ValidateAntiForgeryToken] // 跨站请求验证
         public async Task<IActionResult> Create([Bind("Id,RealName,EnrollmentDate")] Student student)
         {
-            if (ModelState.IsValid)
+            try
             {
-                _context.Add(student);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                if (ModelState.IsValid)
+                {
+                    _context.Add(student);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
             }
+            catch (DbUpdateException ex) // 这种异常DbUpdateException 是指数据有问题
+            {
+                ModelState.AddModelError("", "无法进行数据保存,请检查数据是否异常");
+            }
+          
             return View(student);
         }
 
