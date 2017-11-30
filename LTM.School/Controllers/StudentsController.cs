@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
+﻿using LTM.School.Application.Dtos;
 using LTM.School.Core.Models;
 using LTM.School.EntityFramework;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace LTM.School.Controllers
 {
@@ -36,8 +34,8 @@ namespace LTM.School.Controllers
             //var student = await _context.Students
             //    .SingleOrDefaultAsync(m => m.Id == id);
 
-            
-            var student = await _context.Students.Include(a=>a.Enrollments).ThenInclude(e=>e.Course).AsNoTracking()
+
+            var student = await _context.Students.Include(a => a.Enrollments).ThenInclude(e => e.Course).AsNoTracking()
                 .SingleOrDefaultAsync(m => m.Id == id);
             if (student == null)
             {
@@ -57,15 +55,21 @@ namespace LTM.School.Controllers
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken] // 跨站请求验证
-        public async Task<IActionResult> Create([Bind("Id,RealName,EnrollmentDate")] Student student)
+        [ValidateAntiForgeryToken] // 跨站请求验证 很重要
+        public async Task<IActionResult> Create(StudentDto dto)
         {
             try
             {
                 if (ModelState.IsValid)
                 {
-                    _context.Add(student);
+                    var entity = new Student
+                    {
+                        RealName = dto.RealName,
+                        EnrollmentDate = dto.EnrollmentDate
+                    };
+                    _context.Add(entity);
                     await _context.SaveChangesAsync();
+                    //return View(student);
                     return RedirectToAction(nameof(Index));
                 }
             }
@@ -73,8 +77,8 @@ namespace LTM.School.Controllers
             {
                 ModelState.AddModelError("", "无法进行数据保存,请检查数据是否异常");
             }
-          
-            return View(student);
+
+            return View(dto);
         }
 
         // GET: Students/Edit/5
@@ -96,7 +100,7 @@ namespace LTM.School.Controllers
         // POST: Students/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
+        [HttpPost] //ActionName("Edit" 即使方法名是EditPOST但是实际路由还是edit
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,RealName,EnrollmentDate")] Student student)
         {
@@ -104,43 +108,69 @@ namespace LTM.School.Controllers
             {
                 return NotFound();
             }
-
+            // 改进版本
+            var entity = await _context.Students.SingleOrDefaultAsync(a => a.Id == id);
             if (ModelState.IsValid)
             {
-                try
+                if (await TryUpdateModelAsync<Student>(entity, "", s => s.RealName, s => s.EnrollmentDate))
                 {
-                    _context.Update(student);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!StudentExists(student.Id))
+                    try
                     {
-                        return NotFound();
+
+                        await _context.SaveChangesAsync();
+                        return RedirectToAction(nameof(Index));
                     }
-                    else
+                    catch (DbUpdateException)
                     {
+                        ModelState.AddModelError("", "无法进行数据保存,请检查数据是否异常");
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
             }
+            
+
+
+            //if (ModelState.IsValid)
+            //{
+            //    try
+            //    {
+            //        _context.Update(student);
+            //        await _context.SaveChangesAsync();
+            //    }
+            //    catch (DbUpdateConcurrencyException)
+            //    {
+            //        if (!StudentExists(student.Id))
+            //        {
+            //            return NotFound();
+            //        }
+            //        else
+            //        {
+            //            throw;
+            //        }
+            //    }
+            //    return RedirectToAction(nameof(Index));
+            //}
             return View(student);
         }
 
         // GET: Students/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(int? id,bool? saveChangesError=false)
         {
             if (id == null)
             {
                 return NotFound();
             }
-
-            var student = await _context.Students
+            // AsNoTracking() 会提高效率
+            var student = await _context.Students.AsNoTracking()
                 .SingleOrDefaultAsync(m => m.Id == id);
             if (student == null)
             {
                 return NotFound();
+            }
+            // 修改
+            if (saveChangesError.GetValueOrDefault())
+            {
+                ViewBag.SaveError = "删除失败,联系系统管理员";
             }
 
             return View(student);
@@ -151,10 +181,22 @@ namespace LTM.School.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var student = await _context.Students.SingleOrDefaultAsync(m => m.Id == id);
-            _context.Students.Remove(student);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            var student = await _context.Students.AsNoTracking().SingleOrDefaultAsync(m => m.Id == id);
+            if (student==null)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+            try
+            {
+                _context.Students.Remove(student);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            catch (System.Exception)
+            {
+                return RedirectToAction(nameof(Delete), new { id=id, saveChangesError=true });
+            }
+                   
         }
 
         private bool StudentExists(int id)

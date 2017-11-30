@@ -30,5 +30,7 @@ namespace LTM.School.Core.Models
         /// </summary>
         [DisplayName("登记信息")]
         public ICollection<Enrollment> Enrollments { get; set; }
+
+        //public string Secret { get; set; }
     }
 }
