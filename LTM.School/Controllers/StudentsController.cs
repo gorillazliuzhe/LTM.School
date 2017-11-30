@@ -127,9 +127,7 @@ namespace LTM.School.Controllers
                     }
                 }
             }
-            
-
-
+           
             //if (ModelState.IsValid)
             //{
             //    try
