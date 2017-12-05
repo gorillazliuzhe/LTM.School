@@ -1,0 +1,36 @@
+﻿@model LTM.School.Core.Models.Instructor
+
+@{
+    ViewData["Title"] = "删除教师信息";
+}
+
+<h2>删除教师信息</h2>
+
+@{
+    <h3>是否确认删除 @Model.RealName 教师信息?</h3>
+}
+
+<div>
+    <h4>Instructor</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.RealName)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.RealName)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.HireDate)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.HireDate)
+        </dd>
+    </dl>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <input type="submit" value="Delete" class="btn btn-default" /> |
+        <a asp-action="Index">Back to List</a>
+    </form>
+</div>

@@ -1,6 +1,24 @@
-﻿@{
-    ViewData["Title"] = "About";
+﻿@using LTM.School.ViewModels
+@model List<EnrollmentDateGroup>
+@{
+    ViewData["Title"] = "关于我们";
 }
+<h2>学生信息统计</h2>
+<table>
+    <tr>
+        <th>注册时间</th>
+        <th>学生人数</th>
+    </tr>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@Html.DisplayFor(a=>item.EnrollmentDate)</td>
+            <td>@Html.DisplayFor(a => item.StudentCount)</td>
+        </tr>
+    }
+  
+</table>
+
 <h2>@ViewData["Title"]</h2>
 <h3>@ViewData["Message"]</h3>
 

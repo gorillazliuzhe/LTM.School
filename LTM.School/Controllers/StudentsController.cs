@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
+using LTM.School.Common;
 
 namespace LTM.School.Controllers
 {
@@ -18,9 +19,78 @@ namespace LTM.School.Controllers
         }
 
         // GET: Students
-        public async Task<IActionResult> Index()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sortOrder">排序字段</param>
+        /// <param name="searchStudent">搜索参数</param>
+        /// <param name="page">第几页</param>
+        /// <param name="currentStudent">当前学生参数</param>
+        /// <returns></returns>
+        public async Task<IActionResult> Index(string sortOrder,string searchStudent,int? page,string currentStudent)
         {
-            return View(await _context.Students.ToListAsync());
+            #region 参数
+            // 姓名排序参数
+            ViewData["Name_Sort_Parm"] = string.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            // 时间排序参数
+            ViewData["Date_Sort_Parm"] = sortOrder == "Date" ? "date_desc" : "Date";
+            // 搜索关键字
+            ViewData["SearchStudent"] = searchStudent;
+
+            ViewData["CurrentSort"] = sortOrder;
+            #endregion
+            var students = from student in _context.Students select student;
+            // 当前排序得关键字
+            // 当前过滤页得参数
+            if (!string.IsNullOrEmpty(searchStudent))
+            {
+                page = 1;
+            }
+            else
+            {
+                searchStudent = currentStudent;
+            }
+            #region 排序搜索功能
+            #region 搜索
+           
+            if (!string.IsNullOrWhiteSpace(searchStudent))
+            {
+                // Contains 相当于模糊查询 sql中的 like
+                students = students.Where(a => a.RealName.Contains(searchStudent));
+            }
+            #endregion
+
+            #region 排序
+           
+            switch (sortOrder)
+            {
+                case "name_desc":
+                    students = students.OrderByDescending(a => a.RealName);
+                    break;
+                case "Date":
+                    students = students.OrderBy(a => a.EnrollmentDate);
+                    break;
+                case "date_desc":
+                    students = students.OrderByDescending(a => a.EnrollmentDate);
+                    break;
+                default:
+                    students = students.OrderBy(a => a.RealName);
+                    break;
+            }
+            #endregion
+            //var dtos = await students.AsNoTracking().ToListAsync();
+            #endregion
+
+            #region 分页 这块更排序和搜索功能一起用有问题 紧紧参考代码逻辑就好
+            
+            int pageSize = 3;
+
+            var entities =  students.AsNoTracking();
+
+            var dtos = await PaginatedList<Student>.CreatepagingAsync(entities, page ?? 1, pageSize);
+            #endregion
+      
+            return View(dtos);
         }
 
         // GET: Students/Details/5
@@ -73,7 +143,7 @@ namespace LTM.School.Controllers
                     return RedirectToAction(nameof(Index));
                 }
             }
-            catch (DbUpdateException ex) // 这种异常DbUpdateException 是指数据有问题
+            catch (DbUpdateException ) // 这种异常DbUpdateException 是指数据有问题
             {
                 ModelState.AddModelError("", "无法进行数据保存,请检查数据是否异常");
             }
@@ -127,7 +197,8 @@ namespace LTM.School.Controllers
                     }
                 }
             }
-           
+
+            #region 系统默认生成
             //if (ModelState.IsValid)
             //{
             //    try
@@ -148,6 +219,8 @@ namespace LTM.School.Controllers
             //    }
             //    return RedirectToAction(nameof(Index));
             //}
+            #endregion
+
             return View(student);
         }
 

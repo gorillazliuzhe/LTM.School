@@ -1,41 +1,61 @@
-﻿@model IEnumerable<LTM.School.Core.Models.Student>
-
+﻿@*@model IEnumerable<LTM.School.Core.Models.Student>*@
+@*分页类型*@
+@model LTM.School.Common.PaginatedList<LTM.School.Core.Models.Student> 
 @{
     ViewData["Title"] = "Index";
 }
-
 <h2>Index</h2>
-
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create">添加</a>
 </p>
+
+<form asp-action="Index" method="get">
+    <div class="form-actions no-color">
+        <p>
+            姓名:<input type="text" name="searchStudent" value="@ViewData["SearchStudent"]" />
+            <input type="submit" value="搜索" class="btn btn-default" />
+            <a asp-action="Index">查询所有</a>
+        </p>
+    </div>
+</form>
+
 <table class="table">
     <thead>
         <tr>
-                <th>
-                    @Html.DisplayNameFor(model => model.RealName)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.EnrollmentDate)
-                </th>
+            <th>
+                <a asp-action="Index" asp-route-currentStudent="@ViewData["SearchStudent"]" asp-route-sortOrder="@ViewData["Name_Sort_Parm"]">姓名</a>
+            </th>
+            <th>
+                <a asp-action="Index" asp-route-currentStudent="@ViewData["SearchStudent"]" asp-route-sortOrder="@ViewData["Date_Sort_Parm"]">注册时间</a>
+
+            </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.RealName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.EnrollmentDate)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.RealName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.EnrollmentDate)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">编辑</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">详情</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">删除</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
+@{
+    var prevDisable = !Model.HasPreViousPage ? "disabled" : "";
+    var nextDisable = !Model.HasNextPage ? "disabled" : "";
+}
+
+@*sortOrder 是方法得参数*@
+<a asp-action="Index" class="btn btn-default @prevDisable" asp-route-sortOrder="@ViewData["CurrentSort"]" asp-route-page="@(Model.PageIndex-1)" asp-route-currentStudent="@ViewData["currentStudent"]">上一页</a>
+<a asp-action="Index" class="btn btn-default @nextDisable" asp-route-sortOrder="@ViewData["CurrentSort"]" asp-route-page="@(Model.PageIndex+1)" asp-route-currentStudent="@ViewData["currentStudent"]">下一页</a>
