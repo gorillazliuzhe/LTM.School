@@ -15,6 +15,8 @@ namespace LTM.School.EntityFramework
         /// <param name="options"></param>
         public SchoolDbContext(DbContextOptions<SchoolDbContext> options):base(options)
         {
+            // 启用级联删除全局启用
+            // _context.ChangeTracker.AutoDetectChangesEnabled = true;
         }
 
         // 新建得实体一定要注入到数据库链接上下文 

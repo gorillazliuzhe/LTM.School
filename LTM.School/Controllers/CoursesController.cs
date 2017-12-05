@@ -143,7 +143,8 @@ namespace LTM.School.Controllers
             {
                 return NotFound();
             }
-
+            // 启用级联删除
+            // _context.ChangeTracker.AutoDetectChangesEnabled = true;
             return View(course);
         }
 
